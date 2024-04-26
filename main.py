@@ -165,7 +165,47 @@ def jump(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
         possibSt[yto][xto]=whoseMove
 
         return possibSt
+    
+def game(gameState):
+    players=['1','2']
+    whoseTurn=0
+
+    while True:
+        printGameState(gameState)
+
+        #player moves
+        fromWhereX=int(input('Podaj wsp. x pionka, którego chcesz przesunąć: '))
+        fromWhereY=int(input('Podaj wsp. y pionka, którego chcesz przesunąć: '))
+        toWhereX=int(input('Podaj wsp. x pola, na które chcesz przesunąć pionek: '))
+        toWhereY=int(input('Podaj wsp. y pola, na które chcesz przesunąć pionek: '))
+
+        moveResult=move(toWhereY, toWhereX, fromWhereY, fromWhereX, players[whoseTurn], gameState)
+        if(moveResult[1]<1):
+            whoseTurn+=1
+            whoseTurn%=2
+            gameState=moveResult[0]
+
+
+#wykonuje ruch w określonym kierunku i zwraca stan po ruchu
+def move(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
+    
+    #sprawdzamy, w jakim kierunku jest ruch
+    displacement=[xto-xcurrent, yto-ycurrent]
+    # if() ##tu skończyłem
+
+    # if 0<=yto and yto
+    if gameState[yto][xto] == '0' and gameState[ycurrent][xcurrent]==whoseMove:
+        #możliwy stan
+        possibSt=gameState[:]
+        possibSt[ycurrent][xcurrent]='0'
+        possibSt[yto][xto]=whoseMove
+
+        return [possibSt, 0]
+    else:
+        print('Podano nieprawidłowe pola')
+        return [gameState,1]
+
 
 if __name__=='__main__':
     gameState=prepareStartGameState()
-    printGameState(gameState)
+    game(gameState)
