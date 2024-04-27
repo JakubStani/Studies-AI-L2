@@ -7,3 +7,6 @@ class Node:
         self.parent=parent
         self.children=children
         self.depth=depth
+
+    def setChildren(self, children):
+        self.children=children
