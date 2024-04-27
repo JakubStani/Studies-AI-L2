@@ -1,3 +1,5 @@
+import copy
+
 def prepareStartGameState():
     gameState=[]
     counters=5
@@ -60,115 +62,129 @@ def generateAllPossibleMovesInThisRound(whoseMove, gameState):
                 #sprawdzamy możliwości jego ruchu
                 allCounterMoves = allPossibleMoveForCounter(x, y, whoseMove, gameState)
 
-def allPossibleMoveForCounter(x, y, whoseMove, gameState):
+def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
     possibleStates=[]
 
     #sprawdzamy wszystkie możliwe ruchy i zapisujemy możliwe stany
     while True:
 
-        #ruch w dół o 1
-        if y+1<=15:
-            possibleStates.append(moveClose(y+1, x, y, x, whoseMove, gameState))
-        
-        #ruch do góry o 1
-        if y-1>=0:
-            possibleStates.append(moveClose(y-1, x, y, x, whoseMove, gameState))
-        
-        #ruch do prawej
-        if x+1<=15:
-            possibleStates.append(moveClose(y, x+1, y, x, whoseMove, gameState))
-        
-        #ruch do lewej
-        if 0<=x-1:
-            possibleStates.append(moveClose(y, x-1, y, x, whoseMove, gameState))
-        
-        #ruch do lewego górnego rogu
-        if 0<=x-1 and 0<=y-1:
-            possibleStates.append(moveClose(y-1, x-1, y, x, whoseMove, gameState))
+        if(whoseMove=='1'):
+            #ruch w dół o 1
+            possibleStates=moveInDirection(y+1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly)
 
-        #ruch do prawego górnego rogu
-        if x+1<=15 and y-1<=15:
-            possibleStates.append(moveClose(y-1, x+1, y, x, whoseMove, gameState))
+            #ruch do prawego dolnego rogu
+            possibleStates=moveInDirection(y+1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            
+            #ruch do prawej
+            possibleStates=moveInDirection(y,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+
+        else:
+            #ruch do góry o 1
+            possibleStates=moveInDirection(y-1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            
+            #ruch do lewej
+            possibleStates=moveInDirection(y,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            
+            #ruch do lewego górnego rogu
+            possibleStates=moveInDirection(y-1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
         
-        #ruch do prawego dolnego rogu
-        if x+1<=15 and y+1<=15:
-            possibleStates.append(moveClose(y+1, x+1, y, x, whoseMove, gameState))
+        #ruch do prawego górnego rogu
+        possibleStates=moveInDirection(y-1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
 
         #ruch do lewego dolnego rogu
-        if x-1<=15 and y+1<=15:
-            possibleStates.append(moveClose(y+1, x-1, y, x, whoseMove, gameState))
+        possibleStates=moveInDirection(y+1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+
+        return possibleStates
 
         #jak daleki skok
         # for up in range(2,15,2):
-        
-#TODO: sprawdzaj wszystkie możliwe skoki (przeskakiwanie przez następne pionki)
 
-#sprawdza w pętli, jak daleko może skoczyć
-def searchAllPossibleJumps(ycurrent, xcurrent, whoseMove, gameState, possibleStates):
+#pozwala na rekurencyjne sprawdzanie możliwych ruchów
+def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleStates, jumpOnly):
     #ruch w dół o 1
-        if ycurrent+1<=15:
-            possibleStates.append(jump(ycurrent+1, xcurrent, ycurrent, xcurrent, whoseMove, gameState))
-        
-        #ruch do góry o 1
-        if ycurrent-1>=0:
-            possibleStates.append(jump(ycurrent-1, xcurrent, ycurrent, xcurrent, whoseMove, gameState))
-        
-        #ruch do prawej
-        if xcurrent+1<=15:
-            possibleStates.append(jump(ycurrent, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
-        
-        #ruch do lewej
-        if 0<=xcurrent-1:
-            possibleStates.append(jump(ycurrent, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
-        
-        #ruch do lewego górnego rogu
-        if 0<=xcurrent-1 and 0<=ycurrent-1:
-            possibleStates.append(jump(ycurrent-1, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
+    if 0<=yto and yto<=15 and 0<=xto and xto<=15:
+        #sprawdzamy, w jakim kierunku jest ruch
+        displacement=[xto-xcurrent, yto-ycurrent]
+        if gameState[yto][xto] == '0' and not jumpOnly:
+            possibleStates.append(moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState))
+        else:
+            if not gameState[yto][xto] == '0':
+                #sprawdzamy, czy skok będzie jeszcze w granicy planszy
+                if 0<=yto + displacement[1] and yto + displacement[1]<= 15 and 0<=xto + displacement[0] and xto + displacement[0]<=15:
+                    if gameState[yto + displacement[1]][xto + displacement[0]] == '0':
+                        possibleStates.append(moveClose(yto + displacement[1], xto + displacement[0], ycurrent, xcurrent, whoseMove, gameState))
+                        newStates=allPossibleMoveForCounter(xto + displacement[0], yto + displacement[1], whoseMove, gameState, True)
+                        possibleStates.extend(newStates)
+    return possibleStates
 
-        #ruch do prawego górnego rogu
-        if xcurrent+1<=15 and ycurrent-1<=15:
-            possibleStates.append(jump(ycurrent-1, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
-        
-        #ruch do prawego dolnego rogu
-        if xcurrent+1<=15 and ycurrent+1<=15:
-            possibleStates.append(jump(ycurrent+1, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
-
-        #ruch do lewego dolnego rogu
-        if xcurrent-1<=15 and ycurrent+1<=15:
-            possibleStates.append(jump(ycurrent+1, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
-
-def checkPossibleMovesInLine():
-    pass
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
 def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
-    
-    #sprawdzamy, w jakim kierunku jest ruch
-    displacement=[xto-xcurrent, yto-ycurrent]
+    possibSt=copy.deepcopy(gameState)
+    # possibSt=gameState[:]
     # if() ##tu skończyłem
 
     # if 0<=yto and yto
     if gameState[yto][xto] == '0':
         #możliwy stan
-        possibSt=gameState[:]
         possibSt[ycurrent][xcurrent]='0'
         possibSt[yto][xto]=whoseMove
+    return possibSt
+        
+#TODO: sprawdzaj wszystkie możliwe skoki (przeskakiwanie przez następne pionki)
 
-        return possibSt
+# #sprawdza w pętli, jak daleko może skoczyć
+# def searchAllPossibleJumps(ycurrent, xcurrent, whoseMove, gameState, possibleStates):
+#     #ruch w dół o 1
+#         if ycurrent+1<=15:
+#             possibleStates.append(jump(ycurrent+1, xcurrent, ycurrent, xcurrent, whoseMove, gameState))
+        
+#         #ruch do góry o 1
+#         if ycurrent-1>=0:
+#             possibleStates.append(jump(ycurrent-1, xcurrent, ycurrent, xcurrent, whoseMove, gameState))
+        
+#         #ruch do prawej
+#         if xcurrent+1<=15:
+#             possibleStates.append(jump(ycurrent, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
+        
+#         #ruch do lewej
+#         if 0<=xcurrent-1:
+#             possibleStates.append(jump(ycurrent, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
+        
+#         #ruch do lewego górnego rogu
+#         if 0<=xcurrent-1 and 0<=ycurrent-1:
+#             possibleStates.append(jump(ycurrent-1, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
+
+#         #ruch do prawego górnego rogu
+#         if xcurrent+1<=15 and ycurrent-1<=15:
+#             possibleStates.append(jump(ycurrent-1, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
+        
+#         #ruch do prawego dolnego rogu
+#         if xcurrent+1<=15 and ycurrent+1<=15:
+#             possibleStates.append(jump(ycurrent+1, xcurrent+1, ycurrent, xcurrent, whoseMove, gameState))
+
+#         #ruch do lewego dolnego rogu
+#         if xcurrent-1<=15 and ycurrent+1<=15:
+#             possibleStates.append(jump(ycurrent+1, xcurrent-1, ycurrent, xcurrent, whoseMove, gameState))
+        
+
+# def checkPossibleMovesInLine():
+#     pass
     
-#wykonuje ruch w określonym kierunku i zwraca stan po ruchu
-def jump(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
-    # if 0<=yto and yto
-    if gameState[yto][xto] == '0':
-        #możliwy stan
-        possibSt=gameState[:]
-        possibSt[ycurrent][xcurrent]='0'
-        possibSt[yto][xto]=whoseMove
+# #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
+# def jump(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
+#     # if 0<=yto and yto
+#     if gameState[yto][xto] == '0':
+#         #możliwy stan
+#         possibSt=gameState[:]
+#         possibSt[ycurrent][xcurrent]='0'
+#         possibSt[yto][xto]=whoseMove
 
-        return possibSt
+#         return possibSt
     
 def game(gameState):
     players=['1','2']
     whoseTurn=0
+    turn=1
 
     while True:
         printGameState(gameState)
@@ -184,6 +200,7 @@ def game(gameState):
             whoseTurn+=1
             whoseTurn%=2
             gameState=moveResult[0]
+            turn+=1
 
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
@@ -204,8 +221,19 @@ def move(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
     else:
         print('Podano nieprawidłowe pola')
         return [gameState,1]
+    
+def areGameStatesTheSame(gameState1, gameState2):
+    for i in range(len(gameState1)):
+        if not gameState1[i]==gameState2[i]:
+            return False
+    return True
 
-
+#mają być przynajmniej 3 różne implementacje heurystyki
 if __name__=='__main__':
     gameState=prepareStartGameState()
-    game(gameState)
+    printGameState(gameState)
+    print('START-------------')
+    allPoss = allPossibleMoveForCounter(4,0,'1',gameState, False)
+    for pos in allPoss:
+        printGameState(pos)
+    # game(gameState)
