@@ -1,34 +1,36 @@
 import copy
 
 def prepareStartGameState():
+    countersDict= dict()
     gameState=[]
     counters=5
-    for i in range(8):
+    for y in range(8):
         gameState.append([])
-        for l in range(16):
-            if(l<counters):
-                gameState[i].append('1')
+        for x in range(16):
+            if(x<counters):
+                gameState[y].append('1')
+                # countersDict[f'{x}-{y}']=
             else:
-                gameState[i].append('0')
-            
-        counters-=1
+                gameState[y].append('0')
+        if 0<y and y<4:
+            counters-=1
+        else:
+            if y>=4:
+                counters=0
     countersSaved=0
 
     arrayToPrepare=[]
-    for i in range(8,16):
-        if(i==11):
-            countersSaved=2
-            counters=countersSaved
+    for y in range(8,16):
+        if(y==11):
+            counters=2
         
-        for l in list(range(16))[::-1]:
-            if(counters>0):
+        for x in list(range(16))[::-1]:
+            if(11<=y and x>15-counters):
                 arrayToPrepare.append('2')
-                counters-=1
             else:
                 arrayToPrepare.append('0')
-        if(i>=11):
-            countersSaved+=1
-            counters=countersSaved
+        if(y>=11 and y<14):
+            counters+=1
         gameState.append(arrayToPrepare[::-1])
         arrayToPrepare=[]
     return gameState
