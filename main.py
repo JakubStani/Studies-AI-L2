@@ -1,5 +1,6 @@
 import copy
 from counter import Counter
+from node import Node 
 
 def prepareStartGameState():
     gameState={
@@ -59,12 +60,13 @@ def printGameboardState(gameboardState):
     print("   ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
 
 
-def generateAllPossibleMovesInThisRound(whoseMove, gameState):
+def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode):
     allPossibleMoves=[]
     for counter in list(gameState['counters'][whoseMove]):
-        #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista możliwych gameStatów
+        #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
         allCounterMoves = allPossibleMoveForCounter(counter._x, counter._y, whoseMove, gameState)
         allPossibleMoves.extend(allCounterMoves)
+    parentNode.setChildren(allPossibleMoves)
 
 def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
     possibleStates=[]
@@ -123,16 +125,19 @@ def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleState
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
 def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
-    possibSt=copy.deepcopy(gameState['gameboardState'])
+    possibSt=copy.deepcopy(gameState) #TUTAJ można ustalić, co będzie przechowywane w węzłach drzewa (jakie dane)
     # possibSt=gameState[:]
     # if() ##tu skończyłem
 
     # if 0<=yto and yto
     if gameState['gameboardState'][yto][xto] == '0':
         #możliwy stan
-        possibSt[ycurrent][xcurrent]='0'
-        possibSt[yto][xto]=whoseMove
-    return possibSt
+        possibSt['gameboardState'][ycurrent][xcurrent]='0'
+        possibSt['gameboardState'][yto][xto]=whoseMove
+
+    #przekształcamy wynik na węzeł
+
+    return Node(0, whoseMove, possibSt, '0', None, None,0) #TODO: zmień turę, kto wygrał, rodzica, dzieci i głębokość (która w zasadzie jest turą) na właściwe wartości
         
 #TODO: sprawdzaj wszystkie możliwe skoki (przeskakiwanie przez następne pionki)
 
