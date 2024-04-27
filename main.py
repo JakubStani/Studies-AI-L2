@@ -1,4 +1,5 @@
 import copy
+from counter import Counter
 
 def prepareStartGameState():
     countersDict= dict()
@@ -9,7 +10,8 @@ def prepareStartGameState():
         for x in range(16):
             if(x<counters):
                 gameState[y].append('1')
-                # countersDict[f'{x}-{y}']=
+                countersDict[f'{x}-{y}-1']= Counter(x, y, '1')
+
             else:
                 gameState[y].append('0')
         if 0<y and y<4:
@@ -27,13 +29,14 @@ def prepareStartGameState():
         for x in list(range(16))[::-1]:
             if(11<=y and x>15-counters):
                 arrayToPrepare.append('2')
+                countersDict[f'{x}-{y}-2']= Counter(x, y, '2')
             else:
                 arrayToPrepare.append('0')
         if(y>=11 and y<14):
             counters+=1
         gameState.append(arrayToPrepare[::-1])
         arrayToPrepare=[]
-    return gameState
+    return (gameState, countersDict)
 
 def printGameState(gameState):
     for y in range(len(gameState)):
