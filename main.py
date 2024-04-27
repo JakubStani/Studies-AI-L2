@@ -2,18 +2,19 @@ import copy
 from counter import Counter
 
 def prepareStartGameState():
-    countersDict= dict()
-    gameState=[]
+    gameState={
+        'gameboardState': [],
+        'counters': dict()}
     counters=5
     for y in range(8):
-        gameState.append([])
+        gameState['gameboardState'].append([])
         for x in range(16):
             if(x<counters):
-                gameState[y].append('1')
-                countersDict[f'{x}-{y}-1']= Counter(x, y, '1')
+                gameState['gameboardState'][y].append('1')
+                gameState['counters'][f'{x}-{y}-1']= Counter(x, y, '1')
 
             else:
-                gameState[y].append('0')
+                gameState['gameboardState'][y].append('0')
         if 0<y and y<4:
             counters-=1
         else:
@@ -29,18 +30,18 @@ def prepareStartGameState():
         for x in list(range(16))[::-1]:
             if(11<=y and x>15-counters):
                 arrayToPrepare.append('2')
-                countersDict[f'{x}-{y}-2']= Counter(x, y, '2')
+                gameState['counters'][f'{x}-{y}-2']= Counter(x, y, '2')
             else:
                 arrayToPrepare.append('0')
         if(y>=11 and y<14):
             counters+=1
-        gameState.append(arrayToPrepare[::-1])
+        gameState['gameboardState'].append(arrayToPrepare[::-1])
         arrayToPrepare=[]
-    return (gameState, countersDict)
+    return gameState
 
-def printGameState(gameState):
-    for y in range(len(gameState)):
-        for x in range(len(gameState[y])):
+def printGameboardState(gameboardState):
+    for y in range(len(gameboardState)):
+        for x in range(len(gameboardState[y])):
             if(x==0):
                 # if(abs(y-15)>=10):
                 #     print(f'{abs(y-15)} ||', end= "  ")
@@ -51,18 +52,18 @@ def printGameState(gameState):
                     print(f'{y} ||', end= "  ")
                 else:
                     print(f'{y}  ||', end= "  ")
-            print(gameState[y][x], end="    ")
+            print(gameboardState[y][x], end="    ")
         print()
     print('__________________________________________________')
     print("   ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
 
 
 def generateAllPossibleMovesInThisRound(whoseMove, gameState):
-    for y in range(len(gameState)):
+    for y in range(len(gameState['gameboardState'])):
         for x in range(len(y)):
 
             #szukamy pionka
-            if gameState[y][x]==whoseMove:
+            if [gameState['gameboardState']][y][x]==whoseMove:
 
                 #sprawdzamy możliwości jego ruchu
                 allCounterMoves = allPossibleMoveForCounter(x, y, whoseMove, gameState)
@@ -110,13 +111,13 @@ def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleState
     if 0<=yto and yto<=15 and 0<=xto and xto<=15:
         #sprawdzamy, w jakim kierunku jest ruch
         displacement=[xto-xcurrent, yto-ycurrent]
-        if gameState[yto][xto] == '0' and not jumpOnly:
+        if gameState['gameboardState'][yto][xto] == '0' and not jumpOnly:
             possibleStates.append(moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState))
         else:
-            if not gameState[yto][xto] == '0':
+            if not gameState['gameboardState'][yto][xto] == '0':
                 #sprawdzamy, czy skok będzie jeszcze w granicy planszy
                 if 0<=yto + displacement[1] and yto + displacement[1]<= 15 and 0<=xto + displacement[0] and xto + displacement[0]<=15:
-                    if gameState[yto + displacement[1]][xto + displacement[0]] == '0':
+                    if gameState['gameboardState'][yto + displacement[1]][xto + displacement[0]] == '0':
                         possibleStates.append(moveClose(yto + displacement[1], xto + displacement[0], ycurrent, xcurrent, whoseMove, gameState))
                         newStates=allPossibleMoveForCounter(xto + displacement[0], yto + displacement[1], whoseMove, gameState, True)
                         possibleStates.extend(newStates)
@@ -124,12 +125,12 @@ def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleState
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
 def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
-    possibSt=copy.deepcopy(gameState)
+    possibSt=copy.deepcopy(gameState['gameboardState'])
     # possibSt=gameState[:]
     # if() ##tu skończyłem
 
     # if 0<=yto and yto
-    if gameState[yto][xto] == '0':
+    if gameState['gameboardState'][yto][xto] == '0':
         #możliwy stan
         possibSt[ycurrent][xcurrent]='0'
         possibSt[yto][xto]=whoseMove
@@ -192,7 +193,7 @@ def game(gameState):
     turn=1
 
     while True:
-        printGameState(gameState)
+        printGameboardState(gameState)
 
         #player moves
         fromWhereX=int(input('Podaj wsp. x pionka, którego chcesz przesunąć: '))
@@ -218,9 +219,9 @@ def move(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
     # if 0<=yto and yto
     if gameState[yto][xto] == '0' and gameState[ycurrent][xcurrent]==whoseMove:
         #możliwy stan
-        possibSt=gameState[:]
-        possibSt[ycurrent][xcurrent]='0'
-        possibSt[yto][xto]=whoseMove
+        possibSt=copy.deepcopy(gameState)
+        possibSt['gameboardState'][ycurrent][xcurrent]='0'
+        possibSt['gameboardState'][yto][xto]=whoseMove
 
         return [possibSt, 0]
     else:
@@ -228,17 +229,17 @@ def move(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
         return [gameState,1]
     
 def areGameStatesTheSame(gameState1, gameState2):
-    for i in range(len(gameState1)):
-        if not gameState1[i]==gameState2[i]:
+    for i in range(len(gameState1['gameboardState'])):
+        if not gameState1['gameboardState'][i]==gameState2['gameboardState'][i]:
             return False
     return True
 
 #mają być przynajmniej 3 różne implementacje heurystyki
 if __name__=='__main__':
     gameState=prepareStartGameState()
-    printGameState(gameState)
+    printGameboardState(gameState['gameboardState'])
     print('START-------------')
     allPoss = allPossibleMoveForCounter(4,0,'1',gameState, False)
     for pos in allPoss:
-        printGameState(pos)
+        printGameboardState(pos)
     # game(gameState)
