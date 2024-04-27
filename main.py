@@ -4,7 +4,8 @@ from counter import Counter
 def prepareStartGameState():
     gameState={
         'gameboardState': [],
-        'counters': dict()}
+        'counters': {'1':dict(), '2': dict()}
+        }
     counters=5
     for y in range(8):
         gameState['gameboardState'].append([])
@@ -59,14 +60,11 @@ def printGameboardState(gameboardState):
 
 
 def generateAllPossibleMovesInThisRound(whoseMove, gameState):
-    for y in range(len(gameState['gameboardState'])):
-        for x in range(len(y)):
-
-            #szukamy pionka
-            if [gameState['gameboardState']][y][x]==whoseMove:
-
-                #sprawdzamy możliwości jego ruchu
-                allCounterMoves = allPossibleMoveForCounter(x, y, whoseMove, gameState)
+    allPossibleMoves=[]
+    for counter in list(gameState['counters'][whoseMove]):
+        #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista możliwych gameStatów
+        allCounterMoves = allPossibleMoveForCounter(counter._x, counter._y, whoseMove, gameState)
+        allPossibleMoves.extend(allCounterMoves)
 
 def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
     possibleStates=[]
