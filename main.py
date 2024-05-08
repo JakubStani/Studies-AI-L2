@@ -64,11 +64,11 @@ def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode):
     allPossibleMoves=[]
     for counter in list(gameState['counters'][whoseMove]):
         #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
-        allCounterMoves = allPossibleMoveForCounter(counter._x, counter._y, whoseMove, gameState)
+        allCounterMoves = allPossibleMoveForCounter(counter._x, counter._y, whoseMove, gameState, parentNode)
         allPossibleMoves.extend(allCounterMoves)
     parentNode.setChildren(allPossibleMoves)
 
-def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
+def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly, parentNode):
     possibleStates=[]
 
     #sprawdzamy wszystkie możliwe ruchy i zapisujemy możliwe stany
@@ -76,29 +76,29 @@ def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
 
         if(whoseMove=='1'):
             #ruch w dół o 1
-            possibleStates=moveInDirection(y+1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y+1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
 
             #ruch do prawego dolnego rogu
-            possibleStates=moveInDirection(y+1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y+1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
             
             #ruch do prawej
-            possibleStates=moveInDirection(y,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
 
         else:
             #ruch do góry o 1
-            possibleStates=moveInDirection(y-1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y-1,x,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
             
             #ruch do lewej
-            possibleStates=moveInDirection(y,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
             
             #ruch do lewego górnego rogu
-            possibleStates=moveInDirection(y-1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+            possibleStates=moveInDirection(y-1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
         
         #ruch do prawego górnego rogu
-        possibleStates=moveInDirection(y-1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+        possibleStates=moveInDirection(y-1,x+1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
 
         #ruch do lewego dolnego rogu
-        possibleStates=moveInDirection(y+1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly)
+        possibleStates=moveInDirection(y+1,x-1,y,x,whoseMove,gameState,possibleStates, jumpOnly, parentNode)
 
         return possibleStates
 
@@ -106,25 +106,25 @@ def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly):
         # for up in range(2,15,2):
 
 #pozwala na rekurencyjne sprawdzanie możliwych ruchów
-def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleStates, jumpOnly):
+def moveInDirection(yto,xto,ycurrent,xcurrent,whoseMove,gameState, possibleStates, jumpOnly, parentNode):
     #ruch w dół o 1
     if 0<=yto and yto<=15 and 0<=xto and xto<=15:
         #sprawdzamy, w jakim kierunku jest ruch
         displacement=[xto-xcurrent, yto-ycurrent]
         if gameState['gameboardState'][yto][xto] == '0' and not jumpOnly:
-            possibleStates.append(moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState))
+            possibleStates.append(moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState, parentNode))
         else:
             if not gameState['gameboardState'][yto][xto] == '0':
                 #sprawdzamy, czy skok będzie jeszcze w granicy planszy
                 if 0<=yto + displacement[1] and yto + displacement[1]<= 15 and 0<=xto + displacement[0] and xto + displacement[0]<=15:
                     if gameState['gameboardState'][yto + displacement[1]][xto + displacement[0]] == '0':
                         possibleStates.append(moveClose(yto + displacement[1], xto + displacement[0], ycurrent, xcurrent, whoseMove, gameState))
-                        newStates=allPossibleMoveForCounter(xto + displacement[0], yto + displacement[1], whoseMove, gameState, True)
+                        newStates=allPossibleMoveForCounter(xto + displacement[0], yto + displacement[1], whoseMove, gameState, True, parentNode)
                         possibleStates.extend(newStates)
     return possibleStates
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
-def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
+def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState, parentNode):
     possibSt=copy.deepcopy(gameState) #TUTAJ można ustalić, co będzie przechowywane w węzłach drzewa (jakie dane)
     # possibSt=gameState[:]
     # if() ##tu skończyłem
@@ -137,7 +137,7 @@ def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
 
     #przekształcamy wynik na węzeł
 
-    return Node(0, whoseMove, possibSt, '0', None, None,0) #TODO: zmień turę, kto wygrał, rodzica, dzieci i głębokość (która w zasadzie jest turą) na właściwe wartości
+    return Node(0, whoseMove, possibSt, '0', parentNode, None,0) #TODO: zmień turę, kto wygrał, dzieci i głębokość (która w zasadzie jest turą) na właściwe wartości
         
 #TODO: sprawdzaj wszystkie możliwe skoki (przeskakiwanie przez następne pionki)
 
