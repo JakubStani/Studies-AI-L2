@@ -59,7 +59,17 @@ def printGameboardState(gameboardState):
     print('__________________________________________________')
     print("   ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
 
+#na wejściu jest parent, który ma już dzieci
+def generatePossibleMovesTree(whoseMove, gameState, parentNode, round):
+    if not parentNode._children() == None and round <3: #TODO: ustaw jakąś zmienną na maksymalną głębokość
+        for child in parentNode._children():
+            generateAllPossibleMovesInThisRound(whoseMove, child._gameState(), child, round)
+            nextWhoseMove=str((int(whoseMove)%2)+1)
+            generatePossibleMovesTree(nextWhoseMove, child._gameState(), child, round+1)
+    else: #TODO: sprawdź i ustaw, kto wygrał
+        pass
 
+#na wejściu jest parent, który nie ma dzieci
 def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round):
     allPossibleMoves=[]
     for counter in list(gameState['counters'][whoseMove]):
@@ -241,8 +251,14 @@ def areGameStatesTheSame(gameState1, gameState2):
 if __name__=='__main__':
     gameState=prepareStartGameState()
     printGameboardState(gameState['gameboardState'])
-    print('START-------------')
-    allPoss = allPossibleMoveForCounter(4,0,'1',gameState, False)
-    for pos in allPoss:
-        printGameboardState(pos)
+    # print('START-------------')
+    # allPoss = allPossibleMoveForCounter(4,0,'1',gameState, False)
+    # for pos in allPoss:
+    #     printGameboardState(pos)
     # game(gameState)
+
+    parentNode = Node(0, None, gameState, '0', None, None, 0)
+    generateAllPossibleMovesInThisRound('1', gameState, parentNode, 1)
+
+    generatePossibleMovesTree('1', gameState, parentNode, 1)
+
