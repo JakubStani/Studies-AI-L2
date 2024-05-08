@@ -10,3 +10,9 @@ class Node:
 
     def setChildren(self, children):
         self.children=children
+
+    def _children(self):
+        return self.children
+    
+    def _gameState(self):
+        return self.gameState
