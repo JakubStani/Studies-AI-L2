@@ -1,6 +1,6 @@
 class Node:
-    def __init__(self, turn, whoseMove, gameState, whoWon, parent, children, depth):
-        self.turn = turn
+    def __init__(self, round, whoseMove, gameState, whoWon, parent, children, depth):
+        self.round = round
         self.whoseMove = whoseMove
         self.gameState=gameState
         self.whoWon=whoWon
