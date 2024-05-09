@@ -1,8 +1,10 @@
 import copy
 from counter import Counter
 from node import Node 
+import math
+from colorama import Fore
 
-maxDepth=200
+maxDepth=2
 
 def prepareStartGameState():
     gameState={
@@ -53,14 +55,20 @@ def printGameboardState(gameboardState):
                 #     print(f'{abs(y-15)}  ||', end= "  ")
 
                 if(y>=10):
-                    print(f'{y} ||', end= "  ")
+                    print(f'{Fore.YELLOW}{y} {Fore.YELLOW}||', end= "  ")
                 else:
-                    print(f'{y}  ||', end= "  ")
-            print(gameboardState[y][x], end="    ")
+                    print(f'{Fore.YELLOW}{y}  {Fore.YELLOW}||', end= "  ")
+            color = Fore.BLUE
+            if gameboardState[y][x]=='2':
+                color = Fore.RED
+            if gameboardState[y][x]=='0':
+                color = Fore.WHITE
+            
+            print(color, gameboardState[y][x], end="    ")
         print()
-    print('__________________________________________________')
+    print(Fore.YELLOW,'__________________________________________________')
     print("   ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
-
+    print(Fore.WHITE)
 def printAllChildrenStates(parentNode):
     if(not parentNode._children()==None):
         for i in range(len(parentNode._children())):
@@ -107,7 +115,9 @@ def generatePossibleMovesTree(whoseMove, gameState, parentNode, round):
             generateAllPossibleMovesInThisRound(whoseMove, child._gameState(), child, round+1)
             nextWhoseMove=str((int(whoseMove)%2)+1)
             generatePossibleMovesTree(nextWhoseMove, child._gameState(), child, round+1)
+
             # break #Można odkomentować, aby szybko móc zobaczyć skrajny wymnik dla dużej głębokości
+
     else: #TODO: sprawdź i ustaw, kto wygrał
         pass
 
@@ -210,7 +220,7 @@ def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState, parentNode, ro
     if(checkWin(whoseMove, possibSt['gameboardState'])):
         whoWon=whoseMove
 
-    return Node(round, whoseMove, possibSt, whoWon, parentNode, None, round, testDoNothing, testDoNothing) #TODO: zmień dwie funkcje liczące heurystyki na właściwą wartość
+    return Node(round, whoseMove, possibSt, whoWon, parentNode, None, round, calculateHeuristicAvgDistFromStartingCorner) #TODO: zmień dwie funkcje liczące heurystyki na właściwą wartość
         
 def testDoNothing(arg1, arg2):
     pass
@@ -336,6 +346,38 @@ def checkWin(player, gameStateToCheck):
             if y<15:
                 counters-=1
         return True
+    
+
+##heurystyki
+#TODO: dodaj możliwość łatwego wyboru heurystyki
+#pierwsza heurystyka
+def calculateHeuristicAvgDistFromWinningCorner(player, gameState):
+    sumOfDistances=0
+    numOfCounters=len(list(gameState['counters'][player]))
+    for counter in list(gameState['counters'][player]):
+        sumOfDistances+= counterDistanceToCorner(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toWinningCorner')
+    return sumOfDistances/numOfCounters
+
+#druga heurystyka
+def calculateHeuristicAvgDistFromStartingCorner(player, gameState):
+    sumOfDistances=0
+    numOfCounters=len(list(gameState['counters'][player]))
+    for counter in list(gameState['counters'][player]):
+        sumOfDistances+= counterDistanceToCorner(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toStartingCorner')
+    return sumOfDistances/numOfCounters
+
+def counterDistanceToCorner(player, counterX, counterY, option):
+    if option=='toWinningCorner':
+        winningCorner=[15,15]
+        if player=='2':
+            winningCorner=[0,0]
+    else:
+        winningCorner=[0,0]
+        if player=='2':
+            winningCorner=[15,15]
+    return math.sqrt((winningCorner[0] - counterX)**2 + (winningCorner[1] - counterY)**2)
+
+##
 
 #mają być przynajmniej 3 różne implementacje heurystyki
 if __name__=='__main__':
@@ -347,7 +389,9 @@ if __name__=='__main__':
     #     printGameboardState(pos)
     # game(gameState)
 
-    parentNode = Node(0, None, gameState, '0', None, None, 0, testDoNothing, testDoNothing)
+    ###
+    #budowanie drzewa możliwych ruchów
+    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicAvgDistFromStartingCorner)
     generateAllPossibleMovesInThisRound('1', gameState, parentNode, 1)
 
     #tutaj już zmiana gracza, bo w powyższych dwóch linijkach wygenerowaliśmy ruchy dla gracza 1
@@ -356,6 +400,9 @@ if __name__=='__main__':
     printOneLeaf(parentNode)
 
     print('Koniec programu')
+    ###
+
+    #heurystyka 1-> średnia odległość wszystkich pionków od rogu
 
     # print(f'wynik dla gracza 1: {checkWin('1', gameState["gameboardState"])}') #testowe sprawdzenie, czy ktoś wygrał
 
