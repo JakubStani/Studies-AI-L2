@@ -53,21 +53,20 @@ def printGameboardState(gameboardState):
                 #     print(f'{abs(y-15)} ||', end= "  ")
                 # else:
                 #     print(f'{abs(y-15)}  ||', end= "  ")
-
                 if(y>=10):
-                    print(f'{Fore.YELLOW}{y} {Fore.YELLOW}||', end= "  ")
+                    print(f'{Fore.YELLOW}{y}{Fore.YELLOW}||', end= "  ")
                 else:
-                    print(f'{Fore.YELLOW}{y}  {Fore.YELLOW}||', end= "  ")
+                    print(f'{Fore.YELLOW}{y}{Fore.YELLOW} ||', end= "  ")
             color = Fore.BLUE
             if gameboardState[y][x]=='2':
                 color = Fore.RED
             if gameboardState[y][x]=='0':
                 color = Fore.WHITE
             
-            print(color, gameboardState[y][x], end="    ")
+            print(f'{color}{gameboardState[y][x]}', end="    ")
         print()
-    print(Fore.YELLOW,'__________________________________________________')
-    print("   ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
+    print(f'{Fore.YELLOW}__________________________________________________')
+    print("  ||  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15")
     print(Fore.WHITE)
 def printAllChildrenStates(parentNode):
     if(not parentNode._children()==None):
