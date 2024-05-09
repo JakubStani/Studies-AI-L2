@@ -2,7 +2,7 @@ import copy
 from counter import Counter
 from node import Node 
 
-maxDepth=3
+maxDepth=200
 
 def prepareStartGameState():
     gameState={
@@ -107,18 +107,22 @@ def generatePossibleMovesTree(whoseMove, gameState, parentNode, round):
             generateAllPossibleMovesInThisRound(whoseMove, child._gameState(), child, round+1)
             nextWhoseMove=str((int(whoseMove)%2)+1)
             generatePossibleMovesTree(nextWhoseMove, child._gameState(), child, round+1)
+            # break #Można odkomentować, aby szybko móc zobaczyć skrajny wymnik dla dużej głębokości
     else: #TODO: sprawdź i ustaw, kto wygrał
         pass
 
 #TODO: pozbądź siękluczy współrzędnych pionków (bo one będą sięzmieniać) i zmieniaj współrzędne pionka po jego ruchu
 #na wejściu jest parent, który nie ma dzieci
 def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round):
-    allPossibleMoves=[]
-    for counter in list(gameState['counters'][whoseMove]):
-        #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
-        allCounterMoves = allPossibleMoveForCounter(gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y(), whoseMove, gameState, False, parentNode, round, gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y())
-        allPossibleMoves.extend(allCounterMoves)
-    parentNode.setChildren(allPossibleMoves)
+
+    #sprawdzamy dalej możliwe ruchy tylko wtedy, gdy dany parentNode nie reprezentuje stanu zakończonej gry
+    if parentNode._whoWon()=='0':
+        allPossibleMoves=[]
+        for counter in list(gameState['counters'][whoseMove]):
+            #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
+            allCounterMoves = allPossibleMoveForCounter(gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y(), whoseMove, gameState, False, parentNode, round, gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y())
+            allPossibleMoves.extend(allCounterMoves)
+        parentNode.setChildren(allPossibleMoves)
 
 def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly, parentNode, round, previousX, previousY):
     possibleStates=[]
@@ -194,9 +198,19 @@ def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState, parentNode, ro
         possibSt['gameboardState'][ycurrent][xcurrent]='0'
         possibSt['gameboardState'][yto][xto]=whoseMove
 
+        #przesunięcie pionka
+        del possibSt['counters'][whoseMove][f'{xcurrent}-{ycurrent}-{whoseMove}']
+        newCounter = Counter(xto, yto, whoseMove)
+        possibSt['counters'][whoseMove][f'{xto}-{yto}-{whoseMove}'] = newCounter
+
     #przekształcamy wynik na węzeł
 
-    return Node(round, whoseMove, possibSt, '0', parentNode, None, round, testDoNothing, testDoNothing) #TODO: zmień kto wygrał i dwie funkcje liczące heurystyki na właściwą wartość
+    #sprawdzenie, czy gracz, który ma ruch wygrał
+    whoWon='0'
+    if(checkWin(whoseMove, possibSt['gameboardState'])):
+        whoWon=whoseMove
+
+    return Node(round, whoseMove, possibSt, whoWon, parentNode, None, round, testDoNothing, testDoNothing) #TODO: zmień dwie funkcje liczące heurystyki na właściwą wartość
         
 def testDoNothing(arg1, arg2):
     pass
@@ -298,6 +312,31 @@ def areGameStatesTheSame(gameState1, gameState2):
             return False
     return True
 
+def checkWin(player, gameStateToCheck):
+    #górny lewy róg planszy
+    if player=='2':
+        counters=5
+        for y in range(5):
+            # gameState['gameboardState'].append([])
+            for x in range(counters):
+                if not gameStateToCheck[y][x]=='2':
+                    return False
+            if 0<y:
+                counters-=1
+        return True
+    
+    #dolny prawy róg planszy
+    else:
+        counters=5
+        for y in reversed(range(11, 16)):
+            # gameState['gameboardState'].append([])
+            for x in reversed(range(16-counters, 16)):
+                if not gameStateToCheck[y][x]=='1':
+                    return False
+            if y<15:
+                counters-=1
+        return True
+
 #mają być przynajmniej 3 różne implementacje heurystyki
 if __name__=='__main__':
     gameState=prepareStartGameState()
@@ -317,6 +356,8 @@ if __name__=='__main__':
     printOneLeaf(parentNode)
 
     print('Koniec programu')
+
+    # print(f'wynik dla gracza 1: {checkWin('1', gameState["gameboardState"])}') #testowe sprawdzenie, czy ktoś wygrał
 
     # allPossibleMoveForCounter(0, 0, '1', gameState, False, parentNode, 1, 0, 0)
 

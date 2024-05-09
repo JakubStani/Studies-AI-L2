@@ -21,3 +21,6 @@ class Node:
     
     def _round(self):
         return self.round
+    
+    def _whoWon(self):
+        return self.whoWon
