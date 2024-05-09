@@ -357,19 +357,19 @@ def calculateHeuristicValue(player, gameState, heuristicType):
     numOfCounters=len(list(gameState['counters'][player]))
     
     #pierwsza heurystyka
-    if(heuristicType=='AvgDistFromWinningCorner'):
+    if(heuristicType=='AvgDistToLeftUpperCorner'):
         for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToCorner(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toWinningCorner')
+            sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCorner')
 
     #druga heurystyka
-    elif(heuristicType=='AvgDistFromStartingCorner'):
+    elif(heuristicType=='AvgDistToRightBottomCorner'):
         for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToCorner(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toStartingCorner')
+            sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toRightBottomCorner')
     
     #trzecia heurystyka
     else:
         for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToStartingBorders(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y())
+            sumOfDistances+= counterDistanceToStartingBorders(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCornerBorder')
 
     return sumOfDistances/numOfCounters
 
@@ -389,16 +389,12 @@ def calculateHeuristicValue(player, gameState, heuristicType):
 #         sumOfDistances+= counterDistanceToCorner(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toStartingCorner')
 #     return sumOfDistances/numOfCounters
 
-def counterDistanceToCorner(player, counterX, counterY, option):
-    if option=='toWinningCorner':
-        winningCorner=[15,15]
-        if player=='2':
-            winningCorner=[0,0]
+def counterDistanceToCorner(counterX, counterY, option):
+    if option=='toLeftUpperCorner':
+        corner=[0,0]
     else:
-        winningCorner=[0,0]
-        if player=='2':
-            winningCorner=[15,15]
-    return math.sqrt((winningCorner[0] - counterX)**2 + (winningCorner[1] - counterY)**2)
+        corner=[15,15]
+    return math.sqrt((corner[0] - counterX)**2 + (corner[1] - counterY)**2)
 
 # #trzecia heurystyka
 # def calculateHeuristicAvgDistToStartingBorders(player, gameState):
@@ -408,12 +404,11 @@ def counterDistanceToCorner(player, counterX, counterY, option):
 #         sumOfDistances+= counterDistanceToStartingBorders(player, gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y())
 #     return sumOfDistances/numOfCounters
 
-def counterDistanceToStartingBorders(player, counterX, counterY):
-
-    border=[0,0]
-    if player=='2':
+def counterDistanceToStartingBorders(counterX, counterY, option):
+    if option=='toLeftUpperCornerBorder':
+        border=[0,0]
+    else:
         border=[15,15]
-
     return abs(border[0] - counterX) + abs(border[1] - counterY)
 
 ##
@@ -430,7 +425,7 @@ if __name__=='__main__':
 
     ###
     #budowanie drzewa możliwych ruchów
-    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, '3')
+    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, 'AvgDistToLeftUpperCorner')
     generateAllPossibleMovesInThisRound('1', gameState, parentNode, 1)
 
     #tutaj już zmiana gracza, bo w powyższych dwóch linijkach wygenerowaliśmy ruchy dla gracza 1
