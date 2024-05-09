@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, round, whoseMove, gameState, whoWon, parent, children, depth, calculateheurVal):
+    def __init__(self, round, whoseMove, gameState, whoWon, parent, children, depth, calculateheurVal, heuristicType):
         self.round = round
         self.whoseMove = whoseMove
         self.gameState=gameState
@@ -7,8 +7,9 @@ class Node:
         self.parent=parent
         self.children=children
         self.depth=depth
-        self.heuristicValPlayer1=calculateheurVal('1', gameState)
-        self.heuristicValPlayer2=calculateheurVal('2', gameState)
+        self.heuristicValPlayer1=calculateheurVal('1', gameState, heuristicType)
+        self.heuristicValPlayer2=calculateheurVal('2', gameState, heuristicType)
+        self.heuristicType=heuristicType
 
     def setChildren(self, children):
         self.children=children
@@ -24,3 +25,6 @@ class Node:
     
     def _whoWon(self):
         return self.whoWon
+    
+    def _heuristicType(self):
+        return self.heuristicType
