@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, round, whoseMove, gameState, whoWon, parent, children, depth, calculateheurVal, heuristicType):
+    def __init__(self, round, whoseMove, gameState, whoWon, parent, children, depth, calculateHeurVal, heuristicType):
         self.round = round
         self.whoseMove = whoseMove
         self.gameState=gameState
@@ -7,9 +7,10 @@ class Node:
         self.parent=parent
         self.children=children
         self.depth=depth
-        self.heuristicValPlayer1=calculateheurVal('1', gameState, heuristicType)
-        self.heuristicValPlayer2=calculateheurVal('2', gameState, heuristicType)
+        self.heuristicVal=calculateHeurVal(whoseMove, gameState, heuristicType)
         self.heuristicType=heuristicType
+        self.childrenMinMaxValue=None
+        self.bestChild=None
 
     def setChildren(self, children):
         self.children=children
@@ -28,3 +29,12 @@ class Node:
     
     def _heuristicType(self):
         return self.heuristicType
+    
+    def _heuristicVal(self):
+        return self.heuristicVal
+    
+    def setChildrenMinMaxValue(self, childrenMinMaxValue):
+        self.childrenMinMaxValue=childrenMinMaxValue
+
+    def setBestChild(self, bestChild):
+        self.bestChild=bestChild

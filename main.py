@@ -4,7 +4,7 @@ from node import Node
 import math
 from colorama import Fore
 
-maxDepth=100
+maxDepth=3
 
 def prepareStartGameState():
     gameState={
@@ -107,22 +107,22 @@ def printOneLeaf(parentNode):
 
 #na wejściu jest parent, który ma już dzieci
 #podana runda, to runda, która zostanie przypisana dzieciom parentNoda
-def generatePossibleMovesTree(whoseMove, gameState, parentNode, round):
+def generatePossibleMovesTree(whoseMove, gameState, parentNode, round, minPlayer, maxPlayer):
     global maxDepth
     if not parentNode._children() == None and round <maxDepth: #TODO: ustaw jakąś zmienną na maksymalną głębokość
         for child in parentNode._children():
-            generateAllPossibleMovesInThisRound(whoseMove, child._gameState(), child, round+1)
+            generateAllPossibleMovesInThisRound(whoseMove, child._gameState(), child, round+1, minPlayer, maxPlayer)
             nextWhoseMove=str((int(whoseMove)%2)+1)
-            generatePossibleMovesTree(nextWhoseMove, child._gameState(), child, round+1)
+            generatePossibleMovesTree(nextWhoseMove, child._gameState(), child, round+1, minPlayer, maxPlayer)
 
-            break #Można odkomentować, aby szybko móc zobaczyć skrajny wymnik dla dużej głębokości
+            # break #Można odkomentować, aby szybko móc zobaczyć skrajny wymnik dla dużej głębokości
 
     else: #TODO: sprawdź i ustaw, kto wygrał
         pass
 
 #TODO: pozbądź siękluczy współrzędnych pionków (bo one będą sięzmieniać) i zmieniaj współrzędne pionka po jego ruchu
 #na wejściu jest parent, który nie ma dzieci
-def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round):
+def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round, minPlayer, maxPlayer):
 
     #sprawdzamy dalej możliwe ruchy tylko wtedy, gdy dany parentNode nie reprezentuje stanu zakończonej gry
     if parentNode._whoWon()=='0':
@@ -131,6 +131,7 @@ def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round)
             #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
             allCounterMoves = allPossibleMoveForCounter(gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y(), whoseMove, gameState, False, parentNode, round, gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y())
             allPossibleMoves.extend(allCounterMoves)
+        
         parentNode.setChildren(allPossibleMoves)
 
 def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly, parentNode, round, previousX, previousY):
@@ -352,26 +353,29 @@ def checkWin(player, gameStateToCheck):
 
 
 def calculateHeuristicValue(player, gameState, heuristicType):
+    if not player==None:
+        sumOfDistances=0
+        numOfCounters=len(list(gameState['counters'][player]))
+        
+        #pierwsza heurystyka
+        if(heuristicType=='AvgDistToLeftUpperCorner'):
+            for counter in list(gameState['counters'][player]):
+                sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCorner')
 
-    sumOfDistances=0
-    numOfCounters=len(list(gameState['counters'][player]))
-    
-    #pierwsza heurystyka
-    if(heuristicType=='AvgDistToLeftUpperCorner'):
-        for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCorner')
+        #druga heurystyka
+        elif(heuristicType=='AvgDistToRightBottomCorner'):
+            for counter in list(gameState['counters'][player]):
+                sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toRightBottomCorner')
+        
+        #trzecia heurystyka
+        else:
+            for counter in list(gameState['counters'][player]):
+                sumOfDistances+= counterDistanceToStartingBorders(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCornerBorder')
 
-    #druga heurystyka
-    elif(heuristicType=='AvgDistToRightBottomCorner'):
-        for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toRightBottomCorner')
+        return sumOfDistances/numOfCounters
     
-    #trzecia heurystyka
     else:
-        for counter in list(gameState['counters'][player]):
-            sumOfDistances+= counterDistanceToStartingBorders(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCornerBorder')
-
-    return sumOfDistances/numOfCounters
+        return None
 
 # #pierwsza heurystyka
 # def calculateHeuristicAvgDistFromWinningCorner(player, gameState):
@@ -411,6 +415,37 @@ def counterDistanceToStartingBorders(counterX, counterY, option):
         border=[15,15]
     return abs(border[0] - counterX) + abs(border[1] - counterY)
 
+def findHeuristicValue(allPossibleMoves, option):
+    bestNode=None
+    if option=='min':
+        value=float('inf')
+        for node in allPossibleMoves:
+            if node._heuristicVal()<value:
+                value=node._heuristicVal()
+                bestNode=node
+    else:
+        value=float('-inf')
+        for node in allPossibleMoves:
+            if node._heuristicVal()>value:
+                value=node._heuristicVal()
+                bestNode=node
+    return [bestNode, value]
+
+def calcAllHeuristics(node, minPlayer, maxPlayer):
+    if not node._children()==None:
+        for child in node._children():
+            calcAllHeuristics(child, minPlayer, maxPlayer)
+
+        if minPlayer==str((node._round()%2)+1):
+            bestNodeAndMinMaxVal = findHeuristicValue(node._children(), 'min')
+        else:
+            bestNodeAndMinMaxVal = findHeuristicValue(node._children(), 'max')
+
+        node.setChildrenMinMaxValue(bestNodeAndMinMaxVal[1])
+        node.setBestChild(bestNodeAndMinMaxVal[0])
+    else:
+         node.setChildrenMinMaxValue(node._heuristicVal())
+
 ##
 
 #mają być przynajmniej 3 różne implementacje heurystyki
@@ -425,15 +460,34 @@ if __name__=='__main__':
 
     ###
     #budowanie drzewa możliwych ruchów
-    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, 'AvgDistToLeftUpperCorner')
-    generateAllPossibleMovesInThisRound('1', gameState, parentNode, 1)
+    heuristicType='AvgDistToLeftUpperCorner'
+    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, '3')
+    minPlayer=None
+    maxPlayer=None
+    if heuristicType=='AvgDistToLeftUpperCorner':
+        maxPlayer='1'
+        minPlayer='2'
+    elif heuristicType=='AvgDistToRightBottomCorner':
+        maxPlayer='2'
+        minPlayer='1'
+    else:
+        maxPlayer='1'
+        minPlayer='2'
+
+    generateAllPossibleMovesInThisRound('1', gameState, parentNode, 1, minPlayer, maxPlayer)
 
     #tutaj już zmiana gracza, bo w powyższych dwóch linijkach wygenerowaliśmy ruchy dla gracza 1
-    generatePossibleMovesTree('2', gameState, parentNode, 1)
+    generatePossibleMovesTree('2', gameState, parentNode, 1, minPlayer, maxPlayer)
 
-    printOneLeaf(parentNode)
+    # printOneLeaf(parentNode)
+
+    #obliczanie heurystyk
+    calcAllHeuristics(parentNode, minPlayer, maxPlayer)
 
     print('Koniec programu')
+    ###
+
+    ###gra
     ###
 
     #heurystyka 1-> średnia odległość wszystkich pionków od rogu
