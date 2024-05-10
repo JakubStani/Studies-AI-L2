@@ -27,6 +27,9 @@ class Node:
     def _whoWon(self):
         return self.whoWon
     
+    def _whoseMove(self):
+        return self.whoseMove
+    
     def _heuristicType(self):
         return self.heuristicType
     
@@ -38,3 +41,6 @@ class Node:
 
     def setBestChild(self, bestChild):
         self.bestChild=bestChild
+
+    def _bestChild(self):
+        return self.bestChild

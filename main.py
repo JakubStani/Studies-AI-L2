@@ -298,27 +298,29 @@ def game(gameState):
 
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
-def move(yto, xto, ycurrent, xcurrent, whoseMove, gameState):
-    
-    #sprawdzamy, w jakim kierunku jest ruch
+def move(yto, xto, ycurrent, xcurrent, whoseMove, gameboardState):
+
+
     displacement=[xto-xcurrent, yto-ycurrent]
-    # if() ##tu skończyłem
+    #funkcja move jest przewidziana tylko dla gracza 1., więc 
+    if not (displacement[0]<0 and displacement[1]<=0 or displacement[1]<0 and displacement[0]<=0):
 
-    # if 0<=yto and yto
-    if gameState[yto][xto] == '0' and gameState[ycurrent][xcurrent]==whoseMove:
-        #możliwy stan
-        possibSt=copy.deepcopy(gameState)
-        possibSt['gameboardState'][ycurrent][xcurrent]='0'
-        possibSt['gameboardState'][yto][xto]=whoseMove
+        # if 0<=yto and yto
+        if gameboardState[yto][xto] == '0' and gameboardState[ycurrent][xcurrent]==whoseMove:
+            #możliwy stan
+            possibSt=copy.deepcopy(gameboardState)
+            possibSt[ycurrent][xcurrent]='0'
+            possibSt[yto][xto]=whoseMove
 
-        return [possibSt, 0]
-    else:
-        print('Podano nieprawidłowe pola')
-        return [gameState,1]
+
+            return [possibSt, 0]
+
+    print('Podano nieprawidłowe pola')
+    return [gameboardState,1]
     
 def areGameStatesTheSame(gameState1, gameState2):
-    for i in range(len(gameState1['gameboardState'])):
-        if not gameState1['gameboardState'][i]==gameState2['gameboardState'][i]:
+    for i in range(len(gameState1)):
+        if not gameState1[i]==gameState2[i]:
             return False
     return True
 
@@ -351,7 +353,7 @@ def checkWin(player, gameStateToCheck):
 ##heurystyki
 #TODO: dodaj możliwość łatwego wyboru heurystyki
 
-
+centerOfMass=None
 def calculateHeuristicValue(player, gameState, heuristicType):
     if not player==None:
         sumOfDistances=0
@@ -366,16 +368,59 @@ def calculateHeuristicValue(player, gameState, heuristicType):
         elif(heuristicType=='AvgDistToRightBottomCorner'):
             for counter in list(gameState['counters'][player]):
                 sumOfDistances+= counterDistanceToCorner(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toRightBottomCorner')
-        
+
         #trzecia heurystyka
-        else:
+        elif(heuristicType=='AvgDistToLeftUpperCornerBorder'):
             for counter in list(gameState['counters'][player]):
                 sumOfDistances+= counterDistanceToStartingBorders(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y(), 'toLeftUpperCornerBorder')
+        
+        #czwarta heurystyka
+        elif(heuristicType=='CenterOfMassDisplacement'):
+            global centerOfMass
+            if centerOfMass==None:
+                centerOfMass = calculateCenterOfMass(gameState)
+            
+            currentCenterOfMass=calculateCenterOfMass(gameState)
 
+            return currentCenterOfMass[0]-centerOfMass[0] + (currentCenterOfMass[1]-centerOfMass[1])
+        else:
+            sumOfDistancesPlayer1=0
+            sumOfDistancesPlayer2=0
+            heuristicValue=None
+
+            for counter in list(gameState['counters']['1']):
+                #odległość od początkowego rogu dla pierwszego gracza
+                sumOfDistancesPlayer1+= counterDistanceToCorner(gameState['counters']['1'][counter]._x(), gameState['counters']['1'][counter]._y(), 'toRightBottomCorner')
+            distanceForPlayer1=sumOfDistancesPlayer1/numOfCounters
+
+            for counter in list(gameState['counters']['2']):
+                #odległość od początkowego rogu dla drugiego gracza
+                sumOfDistancesPlayer2+= counterDistanceToCorner(gameState['counters']['2'][counter]._x(), gameState['counters']['2'][counter]._y(), 'toRightBottomCorner')
+            distanceForPlayer2=sumOfDistancesPlayer2/numOfCounters
+
+            #zakładamy, że tutaj gracz drugi jest graczem minimalizującym, a pierwszy maksymalizującym
+            return distanceForPlayer2 + distanceForPlayer1
+            
         return sumOfDistances/numOfCounters
     
     else:
         return None
+
+def calculateCenterOfMass(gameState):
+    sumOfXDistances=0
+    sumOfYDistances=0
+    numOfCounters=len(list(gameState['counters']['1']))
+    for counter in list(gameState['counters']['1']):
+        sumOfXDistances+=gameState['counters']['1'][counter]._x()
+        sumOfYDistances+=gameState['counters']['1'][counter]._y()
+
+    numOfCounters+=len(list(gameState['counters']['2']))
+    for counter in list(gameState['counters']['2']):
+        sumOfXDistances+=gameState['counters']['2'][counter]._x()
+        sumOfYDistances+=gameState['counters']['2'][counter]._y()
+        #print(list(gameState['counters']['1']))
+    #print(f'{sumOfXDistances}/{numOfCounters} i {sumOfYDistances}/{numOfCounters}')
+    return [sumOfXDistances/numOfCounters, sumOfYDistances/numOfCounters]
 
 # #pierwsza heurystyka
 # def calculateHeuristicAvgDistFromWinningCorner(player, gameState):
@@ -415,6 +460,9 @@ def counterDistanceToStartingBorders(counterX, counterY, option):
         border=[15,15]
     return abs(border[0] - counterX) + abs(border[1] - counterY)
 
+# def centerOfMass(gameState['counters'][player][counter]._x(), gameState['counters'][player][counter]._y()):
+#     return 
+
 def findHeuristicValue(allPossibleMoves, option):
     bestNode=None
     if option=='min':
@@ -451,7 +499,7 @@ def calcAllHeuristics(node, minPlayer, maxPlayer):
 #mają być przynajmniej 3 różne implementacje heurystyki
 if __name__=='__main__':
     gameState=prepareStartGameState()
-    printGameboardState(gameState['gameboardState'])
+    # printGameboardState(gameState['gameboardState'])
     # print('START-------------')
     # allPoss = allPossibleMoveForCounter(4,0,'1',gameState, False)
     # for pos in allPoss:
@@ -460,8 +508,8 @@ if __name__=='__main__':
 
     ###
     #budowanie drzewa możliwych ruchów
-    heuristicType='AvgDistToLeftUpperCorner'
-    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, '3')
+    heuristicType='CenterOfMassDisplacement'
+    parentNode = Node(0, None, gameState, '0', None, None, 0, calculateHeuristicValue, heuristicType)
     minPlayer=None
     maxPlayer=None
     if heuristicType=='AvgDistToLeftUpperCorner':
@@ -470,6 +518,9 @@ if __name__=='__main__':
     elif heuristicType=='AvgDistToRightBottomCorner':
         maxPlayer='2'
         minPlayer='1'
+    elif heuristicType=='AvgDistToLeftUpperCornerBorder':
+        maxPlayer='1'
+        minPlayer='2'
     else:
         maxPlayer='1'
         minPlayer='2'
@@ -488,6 +539,74 @@ if __name__=='__main__':
     ###
 
     ###gra
+    playGameState=gameState['gameboardState']
+    print('Plansza:')
+    printGameboardState(gameState['gameboardState'])
+    previousNode=parentNode
+    penultimateNodeHeuristicValue=None
+    round=0
+    whoseMove='1'
+    while True:
+        round+=1
+        print(f'_______________RUNDA: {round}.______________')
+        if whoseMove=='1':
+            isIncorrectMove=1
+            while isIncorrectMove==1:
+                xcurrent = int(input('Podaj wsp. x pionka, który chcesz przesunąć: '))
+                ycurrent = int(input('Podaj wsp. y pionka, który chcesz przesunąć: '))
+                xto = int(input('Podaj wsp. x pola, na które chcesz przesunąć pionek: '))
+                yto = int(input('Podaj wsp. y pola, na które chcesz przesunąć pionek: '))
+                #TODO: zamiast nakładania ograniczeń w move, wyszukuj danego stanu w drzewie, a jak nie znajdziesz, to znaczy, że został wykonany zły ruch
+                newPlayGameStateAndErrorFlag = move(yto, xto,ycurrent,xcurrent,whoseMove,playGameState)
+                # penultimateNodeHeuristicValue=previousNode._heuristicVal()
+                #znajdywanie węzła o danym stanie
+                isChildFound=False
+                isIncorrectMove=newPlayGameStateAndErrorFlag[1]
+                for child in previousNode._children():
+                    if(areGameStatesTheSame(child._gameState()['gameboardState'], newPlayGameStateAndErrorFlag[0])):
+                        previousNode=child
+                        isChildFound=True
+                        break
+                if isChildFound:
+                    isChildFound=False
+                    playGameState=newPlayGameStateAndErrorFlag[0]
+                else:
+                    isIncorrectMove=1
+        else:
+            #w tej części program robi ruch na podstawie drzewa decyzyjnego
+            # penultimateNodeHeuristicValue=previousNode._heuristicVal()
+            playGameState=previousNode._bestChild()._gameState()['gameboardState']
+            previousNode=previousNode._bestChild()
+
+        print(f'Runda {round}: {previousNode}')
+
+        printGameboardState(playGameState)
+        if(checkWin(whoseMove, playGameState)):
+            print(f'GRACZ {whoseMove} WYGRAŁ!!!')
+            break
+        else:
+            if maxDepth==round:
+                if previousNode._heuristicVal()>0:
+                    print(f'GRACZ {previousNode._whoseMove()} WYGRAŁ!!!')
+                elif previousNode._heuristicVal()==0:
+                    print(f'REMIS')
+                else:
+                    print(f'GRACZ {str((int(previousNode._whoseMove())%2)+1)} WYGRAŁ!!!')
+
+                print(f'Wartość heurystyki (typu: {heuristicType}): {previousNode._heuristicVal()}')
+                print(f'Obecny środek masy: {calculateCenterOfMass(previousNode._gameState())}')
+                print(f'Początkowy środek masy: {centerOfMass}')
+                option = input('Czy zagrać jeszcze raz? (t- tak, n- nie): ')
+                if option=='n':
+                    break
+                if option=='t':
+                    previousNode=parentNode
+                    penultimateNodeHeuristicValue=None
+                    round=0
+                    whoseMove='1'
+        #tu skończyłem
+        whoseMove=str((int(whoseMove)%2)+1)
+
     ###
 
     #heurystyka 1-> średnia odległość wszystkich pionków od rogu
