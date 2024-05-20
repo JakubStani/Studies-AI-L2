@@ -38,9 +38,15 @@ class Node:
     
     def setChildrenMinMaxValue(self, childrenMinMaxValue):
         self.childrenMinMaxValue=childrenMinMaxValue
+    
+    def _childrenMinMaxValue(self):
+        return self.childrenMinMaxValue
 
     def setBestChild(self, bestChild):
         self.bestChild=bestChild
 
     def _bestChild(self):
         return self.bestChild
+    
+    def setParent(self, parent):
+        self.parent=parent
