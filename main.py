@@ -242,8 +242,8 @@ def moveClose(yto, xto, ycurrent, xcurrent, whoseMove, gameState, parentNode, ro
 
     #sprawdzenie, czy gracz, który ma ruch wygrał
     whoWon='0'
-    if(checkWin(whoseMove, possibSt['gameboardState'])):
-        whoWon=whoseMove
+    # if(checkWin(whoseMove, possibSt['gameboardState'])):
+    #     whoWon=whoseMove
 
     return Node(round, whoseMove, possibSt, whoWon, parentNode, None, round, calculateHeuristicValue, parentNode._heuristicType()) #TODO: zmień dwie funkcje liczące heurystyki na właściwą wartość
         
@@ -300,26 +300,26 @@ def testDoNothing(arg1, arg2):
 
 #         return possibSt
     
-def game(gameState):
-    players=['1','2']
-    whoseTurn=0
-    turn=1
+# def game(gameState):
+#     players=['1','2']
+#     whoseTurn=0
+#     turn=1
 
-    while True:
-        printGameboardState(gameState)
+#     while True:
+#         printGameboardState(gameState)
 
-        #player moves
-        fromWhereX=int(input('Podaj wsp. x pionka, którego chcesz przesunąć: '))
-        fromWhereY=int(input('Podaj wsp. y pionka, którego chcesz przesunąć: '))
-        toWhereX=int(input('Podaj wsp. x pola, na które chcesz przesunąć pionek: '))
-        toWhereY=int(input('Podaj wsp. y pola, na które chcesz przesunąć pionek: '))
+#         #player moves
+#         fromWhereX=int(input('Podaj wsp. x pionka, którego chcesz przesunąć: '))
+#         fromWhereY=int(input('Podaj wsp. y pionka, którego chcesz przesunąć: '))
+#         toWhereX=int(input('Podaj wsp. x pola, na które chcesz przesunąć pionek: '))
+#         toWhereY=int(input('Podaj wsp. y pola, na które chcesz przesunąć pionek: '))
 
-        moveResult=move(toWhereY, toWhereX, fromWhereY, fromWhereX, players[whoseTurn], gameState)
-        if(moveResult[1]<1):
-            whoseTurn+=1
-            whoseTurn%=2
-            gameState=moveResult[0]
-            turn+=1
+#         moveResult=move(toWhereY, toWhereX, fromWhereY, fromWhereX, players[whoseTurn], gameState)
+#         if(moveResult[1]<1):
+#             whoseTurn+=1
+#             whoseTurn%=2
+#             gameState=moveResult[0]
+#             turn+=1
 
 
 #wykonuje ruch w określonym kierunku i zwraca stan po ruchu
