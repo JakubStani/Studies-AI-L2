@@ -4,7 +4,7 @@ from node import Node
 import math
 from colorama import Fore
 
-maxDepth=2
+maxDepth=1
 
 def prepareStartGameState():
     gameState={
@@ -123,7 +123,7 @@ def generatePossibleMovesTree(whoseMove, gameState, parentNode, round, minPlayer
 
     #najpierw sprawdzamy, czy poprzedni ruch (tzn parentNode- poprzedni, bo wygenerowany w poprzednim działaniu funkcji generującej drzewo)
     #zawiera stan końcowy gry
-    if not checkWin(str((int(whoseMove)%2)+1), gameState):
+    if not checkWin(str((int(whoseMove)%2)+1), gameState['gameboardState']):
 
         #jeżeli parent node nie reprezentuje stanu końca gry, generujemy jego dzieci
         generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round, minPlayer, maxPlayer)
@@ -149,15 +149,15 @@ def generatePossibleMovesTree(whoseMove, gameState, parentNode, round, minPlayer
 #na wejściu jest parent, który nie ma dzieci
 def generateAllPossibleMovesInThisRound(whoseMove, gameState, parentNode, round, minPlayer, maxPlayer):
 
-    #sprawdzamy dalej możliwe ruchy tylko wtedy, gdy dany parentNode nie reprezentuje stanu zakończonej gry
-    if parentNode._whoWon()=='0':
-        allPossibleMoves=[]
-        for counter in list(gameState['counters'][whoseMove]):
-            #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
-            allCounterMoves = allPossibleMoveForCounter(gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y(), whoseMove, gameState, False, parentNode, round, gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y())
-            allPossibleMoves.extend(allCounterMoves)
-        
-        parentNode.setChildren(allPossibleMoves)
+    # #sprawdzamy dalej możliwe ruchy tylko wtedy, gdy dany parentNode nie reprezentuje stanu zakończonej gry
+    # if parentNode._whoWon()=='0':
+    allPossibleMoves=[]
+    for counter in list(gameState['counters'][whoseMove]):
+        #sprawdzamy możliwości jego ruchu -> allCounterMoves to lista węzłów
+        allCounterMoves = allPossibleMoveForCounter(gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y(), whoseMove, gameState, False, parentNode, round, gameState['counters'][whoseMove][counter]._x(), gameState['counters'][whoseMove][counter]._y())
+        allPossibleMoves.extend(allCounterMoves)
+    
+    parentNode.setChildren(allPossibleMoves)
 
 def allPossibleMoveForCounter(x, y, whoseMove, gameState, jumpOnly, parentNode, round, previousX, previousY):
     possibleStates=[]
@@ -372,6 +372,7 @@ def checkWin(player, gameStateToCheck):
         for y in reversed(range(11, 16)):
             # gameState['gameboardState'].append([])
             for x in reversed(range(16-counters, 16)):
+                # print('y',y)
                 if not gameStateToCheck[y][x]=='1':
                     return False
             if y<15:
@@ -510,7 +511,7 @@ def findMinMaxHeuristicValue(allPossibleMoves, option):
     return [bestNode, value]
 
 #tutaj skończyłem
-def calcAllHeuristicsAndReturnChildLeadingToBestHeuristic(node, minPlayer, maxPlayer, minBestNode, maxBestNode):
+def calcAllHeuristicsAndReturnChildLeadingToBestHeuristic(node, minPlayer, maxPlayer):
     if not node._children()==None:
         for child in node._children():
             #nad tym trzeba pomyśleć
@@ -538,27 +539,44 @@ def checkEndOfGame(round, previousNode, playGameState, whoseMove, heuristicType)
     printGameboardState(playGameState['gameboardState'])
     if(checkWin(whoseMove, playGameState['gameboardState'])):
         print(f'GRACZ {whoseMove} WYGRAŁ!!!')
-        return [None, None, None, False]
-    else:
-        if maxDepth==round:
-            if previousNode._heuristicVal()>0:
-                print(f'GRACZ {previousNode._whoseMove()} WYGRAŁ!!!')
-            elif previousNode._heuristicVal()==0:
-                print(f'REMIS')
-            else:
-                print(f'GRACZ {str((int(previousNode._whoseMove())%2)+1)} WYGRAŁ!!!')
+        # return [None, None, None, False]
 
-            print(f'Wartość heurystyki (typu: {heuristicType}): {previousNode._heuristicVal()}')
-            print(f'Obecny środek masy: {calculateCenterOfMass(previousNode._gameState())}')
-            print(f'Początkowy środek masy: {centerOfMass}')
-            option = input('Czy zagrać jeszcze raz? (t- tak, n- nie): ')
-            if option=='n':
-                return [None, None, None, False]
-            if option=='t':
-                previousNode=parentNode
-                round=0
-                whoseMove='1' #TODO: tutaj wczytuje grę na nowo, ale w niewłaściwy sposób: do naprawienia
-                return [previousNode, round, whoseMove, True]
+        print(f'Wartość heurystyki (typu: {heuristicType}): {previousNode._heuristicVal()}')
+        print(f'Obecny środek masy: {calculateCenterOfMass(previousNode._gameState())}')
+        print(f'Początkowy środek masy: {centerOfMass}')
+        option = input('Czy zagrać jeszcze raz? (t- tak, n- nie): ')
+        if option=='n':
+            return [None, None, None, False]
+        if option=='t':
+            previousNode=parentNode
+            round=0
+            whoseMove='1' #TODO: tutaj wczytuje grę na nowo, ale w niewłaściwy sposób: do naprawienia
+            return [previousNode, round, whoseMove, True]
+    
+    #TODO: sprawdzenie, czy gra nie utknęła i nie da sie doprowadzić gry do końca (np. pionek 00 cały czas stoi w miejscu)
+
+
+
+    # else:
+    #     if maxDepth==round:
+    #         if previousNode._heuristicVal()>0:
+    #             print(f'GRACZ {previousNode._whoseMove()} WYGRAŁ!!!')
+    #         elif previousNode._heuristicVal()==0:
+    #             print(f'REMIS')
+    #         else:
+    #             print(f'GRACZ {str((int(previousNode._whoseMove())%2)+1)} WYGRAŁ!!!')
+
+    #         print(f'Wartość heurystyki (typu: {heuristicType}): {previousNode._heuristicVal()}')
+    #         print(f'Obecny środek masy: {calculateCenterOfMass(previousNode._gameState())}')
+    #         print(f'Początkowy środek masy: {centerOfMass}')
+    #         option = input('Czy zagrać jeszcze raz? (t- tak, n- nie): ')
+    #         if option=='n':
+    #             return [None, None, None, False]
+    #         if option=='t':
+    #             previousNode=parentNode
+    #             round=0
+    #             whoseMove='1' #TODO: tutaj wczytuje grę na nowo, ale w niewłaściwy sposób: do naprawienia
+    #             return [previousNode, round, whoseMove, True]
     return None
 
 def takeOutFirstLevelOfChildren(parent):
@@ -652,12 +670,44 @@ if __name__=='__main__':
                 #funkcja move sprawdza, czy ruch był on wykonany poprawnie- tę informację zwraca jako jedną z wartości wyniku
                 isIncorrectMove=newPlayGameStateAndErrorFlag[1]
 
-                #jeżeli ruch był poprawny
+                #flaga mówiąca, czy stan gry został znaleziony w zbiorze możliwych stanów gry po ruchu gracza
+                isChildFound=False
+
+                #jeżeli ruch był po części poprawny (po części, ponieważ tylko niektóre warunki ruchu zostały sprawdzone)
                 if isIncorrectMove==0:
-                    
-                    #zapisujemy nowy stan gry i tworzymy węzeł dokonanego przez gracza ruchu
+
+                    #generujemy możliwe ruchy dla gracza i w pełni sprawdzamy, czy ruch, który wykonał, był poprawny
+                    #podaną rundę będą miały zapisane dzieci previousNode
+                    generateAllPossibleMovesInThisRound(whoseMove, playGameState, previousNode, round, minPlayer, maxPlayer)
+                    calcAllHeuristicsAndReturnChildLeadingToBestHeuristic(previousNode, minPlayer, maxPlayer) #poprzedni komentarz "tu skończyłem" prowadzi też do tego wiersza
+
+                    #szukamy stanu, który jest taki sam, jak ten po ruchu gracza
+                    for child in previousNode._children():
+                        if(areGameStatesTheSame(child._gameState()['gameboardState'], newPlayGameStateAndErrorFlag[0]['gameboardState'])):
+
+                            #węzeł dokonanego przez gracza ruchu ustawiamy jako dziecko previous noda,
+                            #a previous noda ustawiamy jako rodzic węzła dokonanego przez gracza ruchu
+                            previousNode.setChildren([child])
+                            child.setParent(previousNode)
+                            isChildFound=True
+                            break
+                if isChildFound:
+                    isChildFound=False
+
+                    #zapisujemy stan gry
                     playGameState=newPlayGameStateAndErrorFlag[0]
-                    previousNode= Node(round,whoseMove, playGameState, '0', previousNode, None, round, calculateHeuristicValue, heuristicType)
+                    #previous noda ustawiamy jako węzeł dokonanego przez gracza ruchu
+                    previousNode=previousNode._children()[0]
+                #jeżeli nie znaleziono stanu gry w zbiorze możliwych stanów gry po ruchu gracza,
+                #ruch był nieprawidłowy
+                else:
+                    isIncorrectMove=1
+                    print('Nieprawidłowy ruch')
+
+                    #zapisujemy nowy stan gry i tworzymy węzeł dokonanego przez gracza ruchu
+                    # playGameState=newPlayGameStateAndErrorFlag[0]
+                    # previousNode= Node(round,whoseMove, playGameState, '0', previousNode, None, round, calculateHeuristicValue, heuristicType)
+
                 #ponieważ ten kawałek kodu jest w pętli while, będzie się wykonywał,
                 #aż gracz dokona prawidłowego ruchu
             
@@ -677,7 +727,7 @@ if __name__=='__main__':
                 #w drzewie możliwych ruchów, które sprawdzimy)
 
                 #generujemy drzewo możliwych ruchów dla ruchu komputera
-                generatePossibleMovesTree(str((int(previousNode._whoseMove())%2)+1), playGameState, previousNode, round, minPlayer, maxPlayer, 0)
+                generatePossibleMovesTree(whoseMove, playGameState, previousNode, round, minPlayer, maxPlayer, 0)
                 result = calcAllHeuristicsAndReturnChildLeadingToBestHeuristic(previousNode, minPlayer, maxPlayer)
                 
                 #usuwamy dzieci najkorzystniejszego ruchu komputera
@@ -691,7 +741,7 @@ if __name__=='__main__':
 
                 #ustawiamy previous node na najkorzystniejszy ruch komputera
                 previousNode=result[0]
-
+                playGameState=previousNode._gameState()
                 #algorytm wykonał ruch
                 #sprawdzenie, czy komputer zakończył grę
                 prNoRoWhoseFlag=checkEndOfGame(round, previousNode, playGameState, whoseMove, heuristicType)
