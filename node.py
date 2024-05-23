@@ -7,7 +7,7 @@ class Node:
         self.parent=parent
         self.children=children
         self.depth=depth
-        self.heuristicVal=calculateHeurVal(whoseMove, gameState, heuristicType)
+        self.heuristicVal=calculateHeurVal(gameState, heuristicType)
         self.heuristicType=heuristicType
         self.childrenMinMaxValue=None
         self.bestChild=None
@@ -50,3 +50,6 @@ class Node:
     
     def setParent(self, parent):
         self.parent=parent
+    
+    def setHeuristicVal(self, heuristicVal):
+        self.heuristicVal=heuristicVal
